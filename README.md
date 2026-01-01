@@ -90,57 +90,12 @@ habit-tracker/
 ├── .env.example
 └── README.md
 ```
-## Testing
-
-### Backend Tests
-```bash
-cd backend
-pytest
-```
-
-### Frontend Tests
-```bash
-cd frontend
-npm test
-```
-
-## CI/CD
-
-The project includes GitHub Actions workflows for:
-- Automated testing
-- Docker image building
-- Deployment to AWS
-
-## Monitoring
-
-- **Prometheus**: Metrics collection
-- **Winston**: Structured logging
-- **Sentry**: Error tracking and monitoring
-
-## Deployment
-
-### AWS Deployment
-
-1. **EC2 Setup**
-   - Launch EC2 instance
-   - Configure security groups
-   - Install Docker
-
-2. **RDS Setup**
-   - Create PostgreSQL RDS instance
-   - Update DATABASE_URL in .env
-
-3. **S3 Setup**
-   - Create S3 bucket for static assets
-   - Configure bucket policies
-
-4. **Deploy**
-   ```bash
-   docker-compose -f docker-compose.prod.yml up -d
-   ```
-
 ## Contributing
 
 Contributions are welcome! Please read our contributing guidelines first.
+
+## Author
+
+Shivanshu Tiwari
 
 
