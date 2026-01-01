@@ -33,7 +33,7 @@ A comprehensive habit tracking application built with React, FastAPI, PostgreSQL
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/tirshiva/habit-tracker.git
    cd habit-tracker
    ```
 
