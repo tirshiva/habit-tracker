@@ -1,0 +1,79 @@
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.habits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.habit-card {
+  background: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.habit-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.habit-card.inactive {
+  opacity: 0.6;
+}
+
+.habit-card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.habit-color-indicator {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+
+.habit-card-title h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.25rem;
+}
+
+.habit-frequency {
+  font-size: 0.75rem;
+  color: #6B7280;
+  text-transform: uppercase;
+}
+
+.habit-card-description {
+  color: #6B7280;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.habit-reminder {
+  font-size: 0.9rem;
+  color: #3B82F6;
+  margin-bottom: 1rem;
+}
+
+.habit-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.habit-card-actions .btn {
+  flex: 1;
+  min-width: 80px;
+}
+
