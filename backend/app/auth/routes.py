@@ -21,14 +21,28 @@ async def register(
     db: Session = Depends(get_db)
 ):
     """Register a new user"""
-    auth_service = AuthService(db)
-    user_dict = auth_service.register(user_data)
-    return user_dict
+    try:
+        auth_service = AuthService(db)
+        user_dict = auth_service.register(user_data)
+        return user_dict
+    except HTTPException:
+        # Re-raise HTTP exceptions (like email/username already exists)
+        raise
+    except Exception as e:
+        # Log unexpected errors and return a user-friendly message
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Registration error: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Registration failed: {str(e)}"
+        )
 
 
 @router.post("/login", response_model=Token)
 @limiter.limit("5/minute")
 async def login(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):

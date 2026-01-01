@@ -72,7 +72,20 @@ async def add_process_time_header(request: Request, call_next):
 
 @app.on_event("startup")
 async def startup_event():
-    """Startup event - initialize background jobs"""
+    """Startup event - initialize database connection and background jobs"""
+    from app.database import check_database_connection
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    # Check database connection
+    logger.info("Checking database connection...")
+    if not check_database_connection():
+        logger.error("Database connection check failed on startup!")
+        raise RuntimeError("Database connection failed on startup")
+    logger.info("Database connection verified successfully")
+    
+    # Initialize background jobs
     start_streak_calculator()
     start_reminder_scheduler()
 
@@ -89,8 +102,20 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
-    return {"status": "healthy"}
+    """Health check endpoint with database connectivity check"""
+    from app.database import check_database_connection
+    
+    db_status = check_database_connection()
+    if db_status:
+        return {
+            "status": "healthy",
+            "database": "connected"
+        }
+    else:
+        return {
+            "status": "unhealthy",
+            "database": "disconnected"
+        }
 
 
 # Include routers

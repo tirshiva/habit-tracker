@@ -44,6 +44,8 @@ class HabitCompletionService:
         # Invalidate cache
         delete_cache_pattern(f"completions:user:{user_id}:*")
         delete_cache_pattern(f"streaks:user:{user_id}:habit:{completion_data.habit_id}:*")
+        delete_cache(f"analytics:user:{user_id}")
+        delete_cache(f"streaks:user:{user_id}")
         
         return {
             "id": completion.id,
@@ -122,6 +124,8 @@ class HabitCompletionService:
         # Invalidate cache
         delete_cache_pattern(f"completions:user:{user_id}:*")
         delete_cache_pattern(f"streaks:user:{user_id}:habit:{completion.habit_id}:*")
+        delete_cache(f"analytics:user:{user_id}")
+        delete_cache(f"streaks:user:{user_id}")
         
         return {
             "id": completion.id,
@@ -147,6 +151,8 @@ class HabitCompletionService:
         # Invalidate cache
         delete_cache_pattern(f"completions:user:{user_id}:*")
         delete_cache_pattern(f"streaks:user:{user_id}:habit:{habit_id}:*")
+        delete_cache(f"analytics:user:{user_id}")
+        delete_cache(f"streaks:user:{user_id}")
         
         return self.completion_repo.delete(completion)
 

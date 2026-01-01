@@ -22,16 +22,20 @@ class UserRepository:
     
     def create(self, user_data: dict) -> User:
         """Create a new user"""
-        user = User(**user_data)
-        self.db.add(user)
-        self.db.flush()
-        
-        # Create default preferences
-        preferences = UserPreference(user_id=user.id)
-        self.db.add(preferences)
-        self.db.commit()
-        self.db.refresh(user)
-        return user
+        try:
+            user = User(**user_data)
+            self.db.add(user)
+            self.db.flush()
+            
+            # Create default preferences
+            preferences = UserPreference(user_id=user.id)
+            self.db.add(preferences)
+            self.db.commit()
+            self.db.refresh(user)
+            return user
+        except Exception as e:
+            self.db.rollback()
+            raise
     
     def update(self, user: User, user_data: dict) -> User:
         """Update user"""

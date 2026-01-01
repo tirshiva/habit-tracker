@@ -10,7 +10,7 @@ const Habits = () => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    frequency: 'DAILY',
+    frequency: 'daily',  // Backend expects lowercase
     color: '#3B82F6',
     reminder_time: '',
   });
@@ -50,14 +50,18 @@ const Habits = () => {
       setFormData({
         name: '',
         description: '',
-        frequency: 'DAILY',
+        frequency: 'daily',  // Backend expects lowercase
         color: '#3B82F6',
         reminder_time: '',
       });
       loadHabits();
     } catch (error) {
       console.error('Error saving habit:', error);
-      alert('Failed to save habit');
+      const errorMessage = error.response?.data?.detail || 
+                          (Array.isArray(error.response?.data) ? error.response.data.map(e => e.msg).join(', ') : null) ||
+                          error.message || 
+                          'Failed to save habit';
+      alert(`Failed to save habit: ${errorMessage}`);
     }
   };
 
@@ -109,7 +113,7 @@ const Habits = () => {
             setFormData({
               name: '',
               description: '',
-              frequency: 'DAILY',
+              frequency: 'daily',  // Backend expects lowercase
               color: '#3B82F6',
               reminder_time: '',
             });
@@ -157,9 +161,9 @@ const Habits = () => {
                 value={formData.frequency}
                 onChange={handleChange}
               >
-                <option value="DAILY">Daily</option>
-                <option value="WEEKLY">Weekly</option>
-                <option value="CUSTOM">Custom</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="custom">Custom</option>
               </select>
             </div>
 

@@ -1,4 +1,4 @@
-FROM node:18-alpine as build
+FROM node:18-alpine AS build
 
 WORKDIR /app
 
@@ -10,6 +10,10 @@ RUN npm install
 
 # Copy application code
 COPY . .
+
+# Build argument for API URL
+ARG REACT_APP_API_URL=/api/v1
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
 
 # Build the application
 RUN npm run build

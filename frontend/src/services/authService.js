@@ -2,11 +2,12 @@ import api from './api';
 
 export const authService = {
   login: async (username, password) => {
-    const formData = new FormData();
-    formData.append('username', username);
-    formData.append('password', password);
+    // Use URLSearchParams for application/x-www-form-urlencoded format
+    const params = new URLSearchParams();
+    params.append('username', username);
+    params.append('password', password);
     
-    const response = await api.post('/auth/login', formData, {
+    const response = await api.post('/auth/login', params.toString(), {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },

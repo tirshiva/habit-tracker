@@ -39,18 +39,35 @@ class AuthService:
         # Invalidate cache
         delete_cache(f"user:{user.id}")
         
+        # Return all fields required by UserResponse schema
         return {
             "id": user.id,
             "email": user.email,
             "username": user.username,
-            "full_name": user.full_name
+            "full_name": user.full_name,
+            "is_active": user.is_active,
+            "is_verified": user.is_verified,
+            "created_at": user.created_at
         }
     
     def login(self, credentials: UserLogin) -> dict:
         """Authenticate user and return token"""
+        import logging
+        logger = logging.getLogger(__name__)
+        
         user = self.user_repo.get_by_username(credentials.username)
         
-        if not user or not verify_password(credentials.password, user.hashed_password):
+        if not user:
+            logger.warning(f"Login attempt with non-existent username: {credentials.username}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect username or password"
+            )
+        
+        # Verify password
+        password_valid = verify_password(credentials.password, user.hashed_password)
+        if not password_valid:
+            logger.warning(f"Invalid password attempt for user: {credentials.username}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect username or password"
@@ -69,12 +86,15 @@ class AuthService:
             expires_delta=access_token_expires
         )
         
-        # Cache user data
+        # Cache user data with all required fields for UserResponse
         user_data = {
             "id": user.id,
             "email": user.email,
             "username": user.username,
-            "full_name": user.full_name
+            "full_name": user.full_name,
+            "is_active": user.is_active,
+            "is_verified": user.is_verified,
+            "created_at": user.created_at
         }
         set_cache(f"user:{user.id}", user_data, expire=1800)
         

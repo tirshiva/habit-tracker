@@ -28,11 +28,15 @@ const Register = () => {
     setLoading(true);
 
     try {
-      await register(formData);
-      navigate('/login');
+      const response = await register(formData);
+      console.log('Registration successful:', response);
+      // Show success message briefly before navigating
+      setTimeout(() => {
+        navigate('/login');
+      }, 500);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Registration failed. Please try again.');
-    } finally {
+      console.error('Registration error:', err);
+      setError(err.response?.data?.detail || err.message || 'Registration failed. Please try again.');
       setLoading(false);
     }
   };

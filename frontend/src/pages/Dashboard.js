@@ -10,41 +10,149 @@ const Dashboard = () => {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [completingHabitId, setCompletingHabitId] = useState(null);
+  const [completedHabits, setCompletedHabits] = useState(new Set());
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [selectedDate]);
 
   const loadData = async () => {
     try {
+      setLoading(true);
       const [habitsData, analyticsData] = await Promise.all([
         habitService.getAll(),
         analyticsService.getAnalytics(),
       ]);
-      setHabits(habitsData.filter(h => h.is_active));
+      const activeHabits = habitsData.filter(h => h.is_active);
+      setHabits(activeHabits);
       setAnalytics(analyticsData);
+      
+      // Load completions for the selected date to show which habits are completed
+      const completionsPromises = activeHabits.map(async (habit) => {
+        try {
+          const completions = await completionService.getByHabit(habit.id, selectedDate, selectedDate);
+          return { habitId: habit.id, completions };
+        } catch (error) {
+          console.error(`Error loading completions for habit ${habit.id}:`, error);
+          return { habitId: habit.id, completions: [] };
+        }
+      });
+      
+      const completionsResults = await Promise.all(completionsPromises);
+      const completedSet = new Set();
+      completionsResults.forEach(({ habitId, completions }) => {
+        const hasCompletion = completions.some(c => {
+          const completionDate = typeof c.completion_date === 'string' 
+            ? c.completion_date.split('T')[0]
+            : c.completion_date;
+          return completionDate === selectedDate;
+        });
+        if (hasCompletion) {
+          completedSet.add(habitId);
+        }
+      });
+      setCompletedHabits(completedSet);
     } catch (error) {
       console.error('Error loading data:', error);
+      // Set empty state on error instead of leaving loading state
+      setHabits([]);
+      setAnalytics(null);
     } finally {
       setLoading(false);
     }
   };
 
   const handleComplete = async (habitId) => {
+    if (completingHabitId) {
+      return; // Prevent multiple clicks
+    }
+    
+    setCompletingHabitId(habitId);
     try {
-      await completionService.create({
-        habit_id: habitId,
-        completion_date: selectedDate,
+      console.log('Marking habit complete:', habitId, 'for date:', selectedDate);
+      
+      // Check if completion already exists by getting completions for this habit and date
+      const completions = await completionService.getByHabit(habitId, selectedDate, selectedDate);
+      console.log('Existing completions:', completions);
+      
+      // Compare dates (completion_date might be in ISO format or just the date string)
+      const existingCompletion = completions.find(c => {
+        const completionDate = typeof c.completion_date === 'string' 
+          ? c.completion_date.split('T')[0]  // Handle ISO datetime format
+          : c.completion_date;
+        return completionDate === selectedDate;
       });
-      loadData();
+      
+      if (existingCompletion) {
+        // Toggle: Delete if exists
+        console.log('Deleting existing completion:', existingCompletion.id);
+        await completionService.delete(existingCompletion.id);
+        setCompletedHabits(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(habitId);
+          return newSet;
+        });
+      } else {
+        // Create new completion
+        console.log('Creating new completion');
+        await completionService.create({
+          habit_id: habitId,
+          completion_date: selectedDate,
+        });
+        setCompletedHabits(prev => {
+          const newSet = new Set(prev);
+          newSet.add(habitId);
+          return newSet;
+        });
+      }
+      
+      // Reload analytics to reflect changes
+      try {
+        const analyticsData = await analyticsService.getAnalytics();
+        setAnalytics(analyticsData);
+      } catch (error) {
+        console.error('Error reloading analytics:', error);
+      }
+      
+      console.log('Completion updated successfully');
     } catch (error) {
       console.error('Error completing habit:', error);
-      alert('Failed to mark habit as complete');
+      // If error is "already exists", try to delete it
+      if (error.response?.data?.detail?.includes('already exists')) {
+        try {
+          // Get the existing completion and delete it
+          const completions = await completionService.getByHabit(habitId, selectedDate, selectedDate);
+          const existingCompletion = completions.find(c => {
+            const completionDate = typeof c.completion_date === 'string' 
+              ? c.completion_date.split('T')[0]
+              : c.completion_date;
+            return completionDate === selectedDate;
+          });
+          if (existingCompletion) {
+            await completionService.delete(existingCompletion.id);
+            await loadData();
+            return;
+          }
+        } catch (deleteError) {
+          console.error('Error deleting completion:', deleteError);
+        }
+      }
+      const errorMessage = error.response?.data?.detail || 
+                          error.message || 
+                          'Failed to mark habit as complete';
+      alert(errorMessage);
+    } finally {
+      setCompletingHabitId(null);
     }
   };
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return (
+      <div className="container">
+        <div className="loading">Loading...</div>
+      </div>
+    );
   }
 
   return (
@@ -103,9 +211,14 @@ const Dashboard = () => {
                 </div>
                 <button
                   onClick={() => handleComplete(habit.id)}
-                  className="btn btn-primary"
+                  className={`btn ${completedHabits.has(habit.id) ? 'btn-secondary' : 'btn-primary'}`}
+                  disabled={completingHabitId === habit.id}
                 >
-                  Mark Complete
+                  {completingHabitId === habit.id 
+                    ? 'Processing...' 
+                    : completedHabits.has(habit.id) 
+                      ? 'Mark Incomplete' 
+                      : 'Mark Complete'}
                 </button>
               </div>
             ))}

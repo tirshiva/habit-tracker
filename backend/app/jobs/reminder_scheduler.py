@@ -30,8 +30,9 @@ def send_reminder(user_id: int, habit_id: int, habit_name: str, reminder_time: s
 
 def check_and_send_reminders():
     """Check for habits that need reminders and send them"""
-    db = SessionLocal()
+    db = None
     try:
+        db = SessionLocal()
         from app.habits.models import Habit
         
         # Get current time
@@ -85,9 +86,13 @@ def check_and_send_reminders():
                     logger.warning(f"Invalid reminder time format for habit {habit.id}: {reminder_time}")
         
     except Exception as e:
-        logger.error(f"Error in check_and_send_reminders: {e}")
+        logger.error(f"Error in check_and_send_reminders: {e}", exc_info=True)
     finally:
-        db.close()
+        if db:
+            try:
+                db.close()
+            except Exception as e:
+                logger.error(f"Error closing database session: {e}")
 
 
 def start_reminder_scheduler():

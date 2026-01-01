@@ -104,8 +104,9 @@ def calculate_streak_for_habit(db: Session, user_id: int, habit_id: int):
 
 def calculate_all_streaks():
     """Calculate streaks for all active habits"""
-    db = SessionLocal()
+    db = None
     try:
+        db = SessionLocal()
         # Get all active habits
         from app.habits.models import Habit
         habits = db.query(Habit).filter(Habit.is_active == True).all()
@@ -115,9 +116,13 @@ def calculate_all_streaks():
         
         logger.info("Completed streak calculation for all habits")
     except Exception as e:
-        logger.error(f"Error in calculate_all_streaks: {e}")
+        logger.error(f"Error in calculate_all_streaks: {e}", exc_info=True)
     finally:
-        db.close()
+        if db:
+            try:
+                db.close()
+            except Exception as e:
+                logger.error(f"Error closing database session: {e}")
 
 
 def start_streak_calculator():
